@@ -1,0 +1,3 @@
+汇文正楷，V 1.001。Font © Copyright 2022 TerryWang. All rights reserved.
+作者：TerryWang。原字体元数据说明：本字体文件开源且免费商用，禁止第三方在任何平台以任何方式用此字体牟利。
+本设计预览仅嵌入标题所需字形的 WOFF2 子集，不销售字体。

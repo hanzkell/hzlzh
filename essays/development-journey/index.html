@@ -1,0 +1,139 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="记录基于Claude Agent SDK构建文档摘要生成工具的完整开发过程，包括API选型、格式设计、文件命名等挑战的解决方案。"><title>基于Claude Agent SDK的文档摘要处理工具开发记录 · hzlzh</title><link rel="icon" href="/hzlzh/ui/assets/hzlzh-fold-02.svg" type="image/svg+xml"><link rel="canonical" href="https://hanzkell.github.io/hzlzh/essays/development-journey/"><script>try{const saved=localStorage.getItem('hzlzh-theme'); document.documentElement.dataset.theme=['ink','rouge'].includes(saved)?saved:'silk'}catch{}</script><link rel="stylesheet" href="/hzlzh/ui/style.css"><link rel="stylesheet" href="/hzlzh/ui/editorial.css"><style>.site-search[data-astro-cid-pkfvzmd6]{position:relative;z-index:7;margin-left:auto;width:clamp(170px,20vw,240px)}.search-trigger[data-astro-cid-pkfvzmd6],.cross[data-astro-cid-pkfvzmd6]{display:none}form[data-astro-cid-pkfvzmd6]{display:flex;align-items:center;gap:8px;height:40px;padding:0 8px;border-bottom:1px solid var(--line);color:var(--muted)}form[data-astro-cid-pkfvzmd6]:focus-within{border-color:var(--detail)}svg[data-astro-cid-pkfvzmd6]{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}input[data-astro-cid-pkfvzmd6]{flex:1;min-width:0;background:transparent;border:0;color:var(--ink);font-size:14px}input[data-astro-cid-pkfvzmd6]:focus-visible{outline:none}input[data-astro-cid-pkfvzmd6]::placeholder{color:var(--muted)}#search-results[data-astro-cid-pkfvzmd6]{position:absolute;right:0;top:calc(100% + 6px);width:min(370px,85vw);border:1px solid var(--rule);border-radius:10px;background:var(--paper);box-shadow:0 6px 20px #0002;overflow:hidden}p[data-astro-cid-pkfvzmd6]{margin:0;padding:9px 14px;color:var(--muted);font-size:12px}ul[data-astro-cid-pkfvzmd6]{list-style:none;padding:0;margin:0;overflow-y:auto;overscroll-behavior:contain;max-height:min(52dvh,420px)}ul[data-astro-cid-pkfvzmd6] a{display:block;padding:8px 14px;border-top:1px solid var(--line);font-size:15px;line-height:1.55;overflow-wrap:anywhere}ul[data-astro-cid-pkfvzmd6] a:is(:hover,:focus-visible){background:var(--wash);color:var(--ink);outline-offset:-3px}ul[data-astro-cid-pkfvzmd6] small{display:block;color:var(--muted);font-size:11px}@media(min-width:921px){.site-search[data-astro-cid-pkfvzmd6]~.theme-picker{margin-left:6px}}@media(max-width:920px){.site-search[data-astro-cid-pkfvzmd6]{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:calc(var(--keyboard-gap,0px) + env(safe-area-inset-bottom,0px) + 12px);width:44px}.search-trigger[data-astro-cid-pkfvzmd6]{display:grid;place-items:center;margin-left:auto;width:44px;height:44px;border:1px solid var(--rule);border-radius:50%;background:var(--paper);color:var(--detail)}.site-search[data-astro-cid-pkfvzmd6][data-open]{width:min(440px,calc(100% - 32px))}.site-search[data-astro-cid-pkfvzmd6]:not([data-open]) form[data-astro-cid-pkfvzmd6],.site-search[data-astro-cid-pkfvzmd6]:not([data-open]) #search-results[data-astro-cid-pkfvzmd6],.site-search[data-astro-cid-pkfvzmd6][data-open] .lens[data-astro-cid-pkfvzmd6]{display:none}.site-search[data-astro-cid-pkfvzmd6][data-open] .cross[data-astro-cid-pkfvzmd6]{display:block}form[data-astro-cid-pkfvzmd6]{position:absolute;inset:0 52px 0 0;height:44px;border:1px solid var(--rule);border-radius:22px;padding-inline:13px;background:var(--paper)}input[data-astro-cid-pkfvzmd6]{font-size:16px}#search-results[data-astro-cid-pkfvzmd6]{top:auto;bottom:calc(100% + 6px);width:100%}ul[data-astro-cid-pkfvzmd6]{max-height:min(48dvh,calc(var(--visible-height,100dvh) - 112px))}body:has(.site-search:not([hidden])){padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}}
+.prose img{display:block;max-width:100%;height:auto;border-radius:6px}.chapters a{padding:4px 8px;font-size:14px}.prose h2{scroll-margin-top:20px}
+</style></head><body> <script>
+  document.addEventListener('error', event => {
+    const img = event.target;
+    if (img instanceof HTMLImageElement && img.dataset.fallback) {
+      const fallback = img.dataset.fallback;
+      delete img.dataset.fallback;
+      img.closest('[data-authored-cover]')?.removeAttribute('data-authored-cover');
+      img.alt = '';
+      img.src = fallback;
+    }
+  }, true);
+</script> <a class="skip" href="#content">跳到正文</a> <svg class="symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs> <symbol id="house" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7M5.5 9.5v10h5v-6h3v6h5v-10"></path></symbol> <symbol id="book" viewBox="0 0 24 24"><path d="M12 6c-2.2-2-6-2.4-9-1.6v14c3.5-.9 6.6-.2 9 1.5 2.4-1.7 5.5-2.4 9-1.5v-14c-3-.8-6.8-.4-9 1.6Zm0 0v13.5"></path></symbol> <symbol id="note" viewBox="0 0 24 24"><path d="M19 12v6.5a2 2 0 0 1-2 2H5.5a2 2 0 0 1-2-2v-12a2 2 0 0 1 2-2H13M10 14l.6-3.2L18.8 2.6l2.5 2.5-8.1 8.2L10 14Z"></path></symbol> <symbol id="info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 11v5.1"></path><circle cx="12" cy="7.8" r=".9" fill="currentColor" stroke="none"></circle></symbol> </defs></svg> <header class="mast"><div class="mast-inner column"> <a class="brand" href="/hzlzh/" aria-label="hzlzh 首页"><img src="/hzlzh/ui/assets/hzlzh-fold-02.svg" width="79" height="35" alt="hzlzh"></a> <nav class="dock" aria-label="主导航" style="--active:1"> <a href="/hzlzh/" aria-label="首页" title="首页"><svg aria-hidden="true"><use href="#house"></use></svg><span>首页</span></a> <a href="/hzlzh/essays/" aria-current="page" aria-label="随笔" title="随笔"><svg aria-hidden="true"><use href="#book"></use></svg><span>随笔</span></a> <a href="/hzlzh/notes/" aria-label="短记" title="短记"><svg aria-hidden="true"><use href="#note"></use></svg><span>短记</span></a> <a href="/hzlzh/about/" aria-label="关于本站" title="关于本站"><svg aria-hidden="true"><use href="#info"></use></svg><span>关于</span></a> </nav> <div class="site-search" data-index="/hzlzh/search-index.json" hidden data-astro-cid-pkfvzmd6> <button class="search-trigger" type="button" aria-label="打开全站搜索" aria-expanded="false" aria-controls="site-search-form" data-astro-cid-pkfvzmd6> <svg viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-pkfvzmd6><g class="lens" data-astro-cid-pkfvzmd6><circle cx="10.5" cy="10.5" r="6.5" data-astro-cid-pkfvzmd6></circle><path d="m15.5 15.5 5 5" data-astro-cid-pkfvzmd6></path></g><path class="cross" d="m6 6 12 12M18 6 6 18" data-astro-cid-pkfvzmd6></path></svg> </button> <form id="site-search-form" role="search" aria-label="全站搜索" data-astro-cid-pkfvzmd6> <svg viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-pkfvzmd6><circle cx="10.5" cy="10.5" r="6.5" data-astro-cid-pkfvzmd6></circle><path d="m15.5 15.5 5 5" data-astro-cid-pkfvzmd6></path></svg> <input id="search" type="search" placeholder="搜索随笔和短记" aria-label="搜索随笔和短记" aria-controls="search-results" autocomplete="off" enterkeyhint="search" data-astro-cid-pkfvzmd6> </form> <section id="search-results" aria-label="搜索结果" hidden data-astro-cid-pkfvzmd6> <p role="status" data-astro-cid-pkfvzmd6></p><ul data-astro-cid-pkfvzmd6></ul> </section> </div>  <script type="module">const f=e=>e.normalize("NFKC").trim().toLowerCase();function b(e,d){let r=0;for(const s of d){const i=e.title===s?12:e.tags.includes(s)?9:e.title.includes(s)?6:e.tags.some(n=>n.includes(s))?4:e.summary.includes(s)||e.date.includes(s)?1:0;if(!i)return 0;r+=i}return r}const t=document.querySelector(".site-search"),c=t.querySelector("input"),h=t.querySelector(".search-trigger"),S=matchMedia("(max-width:920px)"),l=t.querySelector("#search-results"),g=l.querySelector("p"),o=l.querySelector("ul");let w,p=0;async function L(){const e=await fetch(t.dataset.index);if(!e.ok)throw new Error("Search index unavailable");return(await e.json()).map(r=>({document:r,fields:{title:f(r.title),summary:f(r.summary),tags:r.tags.map(f),date:r.date}}))}function v(){p++,l.hidden=!0,o.replaceChildren()}function u(e){t.toggleAttribute("data-open",e),h.setAttribute("aria-expanded",String(e)),h.setAttribute("aria-label",e?"关闭搜索":"打开全站搜索"),e?c.focus():v()}h.addEventListener("click",()=>u(!t.hasAttribute("data-open")));S.addEventListener("change",()=>u(!1));async function y(e=!1){const d=[...new Set(f(c.value).split(/\s+/).filter(Boolean))];if(!d.length){v();return}const r=++p;l.hidden=!1,w||(g.textContent="正在查找…");try{const s=await(w??=L());if(p!==r)return;const i=s.map(({document:n,fields:a})=>({document:n,score:b(a,d)})).filter(n=>n.score>0).sort((n,a)=>a.score-n.score||a.document.date.localeCompare(n.document.date));o.replaceChildren(...i.map(({document:n})=>{const a=document.createElement("li"),m=document.createElement("a"),x=document.createElement("small");return x.textContent=n.kind+" · "+n.date,m.href=n.href,m.append(n.title,x),a.append(m),a})),o.scrollTop=0,g.textContent=i.length?"找到 "+i.length+" 条结果":"没有找到相符的内容。",e&&o.querySelector("a")?.focus()}catch{if(w=void 0,p!==r)return;o.replaceChildren(),g.textContent="暂时无法读取搜索索引，按回车重试。"}}t.hidden=!1;c.addEventListener("input",()=>y());c.addEventListener("focus",()=>y());t.querySelector("form").addEventListener("submit",e=>{e.preventDefault(),y(!0)});t.addEventListener("keydown",e=>{e.key==="Escape"&&(S.matches&&t.hasAttribute("data-open")?(e.preventDefault(),u(!1),h.focus()):l.hidden||(e.preventDefault(),c.focus(),v())),e.key==="ArrowDown"&&e.target===c&&!l.hidden&&(e.preventDefault(),o.querySelector("a")?.focus())});t.addEventListener("focusout",e=>{t.contains(e.relatedTarget)||u(!1)});document.addEventListener("pointerdown",e=>{t.contains(e.target)||u(!1)});function E(){const e=window.visualViewport;e&&(t.style.setProperty("--keyboard-gap",Math.max(0,innerHeight-e.height-e.offsetTop)+"px"),t.style.setProperty("--visible-height",e.height+"px"))}window.visualViewport?.addEventListener("resize",E);window.visualViewport?.addEventListener("scroll",E);E();</script> <details class="theme-picker"><summary aria-label="选择阅读主题" title="选择阅读主题"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.1" fill="none" stroke="currentColor" stroke-width="1.5"></circle><path fill="currentColor" d="M12 4a8 8 0 0 1 0 16Z"></path></svg></summary> <fieldset><legend>阅读主题</legend> <label><input type="radio" name="theme" value="silk" checked><i class="sample silk"></i>绢白</label> <label><input type="radio" name="theme" value="ink"><i class="sample ink"></i>夜墨</label> <label><input type="radio" name="theme" value="rouge"><i class="sample rouge"></i>绛朱</label> </fieldset></details> </div></header> <main class="column" id="content" tabindex="-1"><article class="article"><div class="eyebrow"><i></i><a href="/hzlzh/essays/">随笔</a><small>/ Essays</small></div> <h1>基于Claude Agent SDK的文档摘要处理工具开发记录</h1><div class="meta"><time>2026.01.25</time></div> <img class="essay-cover-reader" src="/hzlzh/ui/covers/craft-ruler.svg" alt width="480" height="200" loading="eager" decoding="async"> <div class="reading-line" hidden aria-hidden="true"><span></span></div> <details class="chapters"><summary>文章目录 <small>9 节</small></summary><div><a href="#起点一个简单的需求">起点：一个简单的需求</a><a href="#第一个挑战理解-claude-agent-sdk">第一个挑战：理解 Claude Agent SDK</a><a href="#设计工作流程">设计工作流程</a><a href="#摘要格式的演进">摘要格式的演进</a><a href="#漫长的等待日志系统的引入">漫长的等待：日志系统的引入</a><a href="#文件命名的困境">文件命名的困境</a><a href="#原文信息的位置调整">原文信息的位置调整</a><a href="#最终的代码结构">最终的代码结构</a><a href="#反思与总结">反思与总结</a></div></details> <div class="prose"><p>这篇文档记录了我如何一步步构建一个基于 Claude Agent SDK 的文档摘要生成工具。整个过程并非一帆风顺——从最初的 API 选型困惑，到摘要格式的反复调整，再到文件命名规则的多次重构，每一步都伴随着问题的发现与解决。</p>
+<h2 id="起点一个简单的需求">起点：一个简单的需求</h2>
+<p>事情的起点很简单：我有一个 <code>Clippings</code> 文件夹，里面存放着从各处收集的文章（接近300篇）。这些文章越积越多，却很少被真正阅读和消化。我希望有一个工具，能够批量处理这些文章，为每篇生成一张摘要卡片——既保留核心信息，又节省阅读时间（最后，我将其上传到自己的网站中，即<a href="https://linguista.cn/whatsup/">精选阅读</a>模块）。</p>
+<p>最初的代码框架已经存在，使用的是智谱 AI 的 GLM 模型（这是我最初的设想，但还没有完全调通）。但我希望切换到 Claude Agent SDK，因为它提供了更强大的 agent 能力，而且我已经配置好了 Claude Code 环境。接下来的工作是由amp完成的，因为我有免费赠送的10美刀额度，整个thread都使用的smart模型（调用Claude Opus 4.5, 大概花费$7）</p>
+<h2 id="第一个挑战理解-claude-agent-sdk">第一个挑战：理解 Claude Agent SDK</h2>
+<p>当我说”使用 Claude Agent SDK”时，虽然我之前用过几次，但其实对它的详细用法印象并不深刻，只有残存于记忆中的模糊印象。我让amp帮我通过查阅最新文档，了解到 Claude Agent SDK 是一个基于 Claude Code 构建的 Python/TypeScript 库，核心 API 是异步的 <code>query()</code> 函数：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> claude_agent_sdk </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> query, ClaudeAgentOptions</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> for</span><span style="color:#E1E4E8"> message </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> query(</span></span>
+<span class="line"><span style="color:#FFAB70">    prompt</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"你的提示词"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">    options</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">ClaudeAgentOptions(</span><span style="color:#FFAB70">allowed_tools</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">[])</span></span>
+<span class="line"><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#6A737D">    # 处理响应</span></span></code></pre>
+<p>与传统的同步 API 调用不同，这里返回的是一个异步迭代器，需要用 <code>async for</code> 来遍历消息流。这意味着整个处理逻辑都需要重构为异步模式。</p>
+<p>我们写了一个简单的测试脚本来验证 SDK 是否正常工作：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> def</span><span style="color:#B392F0"> test_basic_query</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#F97583">    async</span><span style="color:#F97583"> for</span><span style="color:#E1E4E8"> message </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> query(</span></span>
+<span class="line"><span style="color:#FFAB70">        prompt</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"请用中文简单介绍一下你自己"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">        options</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">ClaudeAgentOptions(</span><span style="color:#FFAB70">allowed_tools</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">[])</span></span>
+<span class="line"><span style="color:#E1E4E8">    ):</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#79B8FF"> hasattr</span><span style="color:#E1E4E8">(message, </span><span style="color:#9ECBFF">'result'</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#79B8FF">            print</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"结果: </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">message.result</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">)</span></span></code></pre>
+<p>测试通过后，我们才开始正式改造主程序。</p>
+<h2 id="设计工作流程">设计工作流程</h2>
+<p>接下来需要设计清晰的工作流程。最终确定的目录结构是：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Clippings/</span></span>
+<span class="line"><span>├── toread/      # 待处理的文章</span></span>
+<span class="line"><span>├── summary/     # 生成的摘要卡片</span></span>
+<span class="line"><span>└── _archived/   # 已处理的原文</span></span></code></pre>
+<p>工作流程很直观：从 <code>toread</code> 读取文章，生成摘要后保存到 <code>summary</code>，同时将原文移动到 <code>_archived</code>。这样既保留了原文的可追溯性，又让待处理队列保持清晰。</p>
+<h2 id="摘要格式的演进">摘要格式的演进</h2>
+<p>摘要的格式经历了几轮调整。</p>
+<p>最初的设计包含”核心观点”、“关键要点”、“金句摘录”、“延伸思考”四个部分，采用分点列举的形式。但这种格式显得有些机械，更像是填空题而非真正的内容理解。</p>
+<p>经过讨论，我们将格式调整为三个部分：</p>
+<ol>
+<li><strong>摘要</strong>：100字左右的精炼概括</li>
+<li><strong>内容框架与概述</strong>：用自然段落描述文章脉络，而非分点罗列</li>
+<li><strong>核心概念及解读</strong>：提取关键词并结合文章进行解读</li>
+</ol>
+<p>这种格式更贴近人类的阅读习惯——先了解大意，再理解结构，最后掌握核心概念。</p>
+<p>关于模板文件，我们发现一个有趣的问题：如果模板中包含具体的示例文字（比如”文章开篇从某个现象切入…”），AI 可能会照搬这些措辞，产生硬编码效果。解决方案是用占位符替代具体示例：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="markdown"><code><span class="line"><span style="color:#79B8FF;font-weight:bold">## 内容框架与概述</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">{用2-4个自然段落概述文章结构与核心论述}</span></span></code></pre>
+<h2 id="漫长的等待日志系统的引入">漫长的等待：日志系统的引入</h2>
+<p>第一次批量处理时，我们遇到了一个实际问题：命令执行后长时间没有任何输出，直到所有文章处理完毕才一次性返回结果。对于几十篇文章的批量处理，这意味着要等待很长时间而不知道进度如何。</p>
+<p>解决方案是引入日志系统。在每次批处理开始时，先创建一个日志文件，列出所有待处理的文件：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="markdown"><code><span class="line"><span style="color:#79B8FF;font-weight:bold"># 摘要生成任务日志</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| 序号 | 文件名 | 状态 |</span></span>
+<span class="line"><span style="color:#E1E4E8">|------|--------|------|</span></span>
+<span class="line"><span style="color:#E1E4E8">| 1 | article-1.md | ⏳ pending |</span></span>
+<span class="line"><span style="color:#E1E4E8">| 2 | article-2.md | ⏳ pending |</span></span></code></pre>
+<p>每处理完一篇文章，立即更新日志状态（✅ done / ❌ failed / ⏭️ skipped），并追加一条带时间戳的日志条目。这样即使命令超时中断，我们也能从日志中看到哪些文章已经处理完成。</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> ProcessLogger</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> update_status</span><span style="color:#E1E4E8">(self, filename: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, status: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, message: </span><span style="color:#79B8FF">str</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> ""</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#6A737D">        # 更新状态表格</span></span>
+<span class="line"><span style="color:#6A737D">        # 追加日志条目</span></span>
+<span class="line"><span style="color:#6A737D">        # 写入文件（实时持久化）</span></span></code></pre>
+<h2 id="文件命名的困境">文件命名的困境</h2>
+<p>文件命名是我们遇到的最棘手的问题之一。</p>
+<p>最初的方案很简单：从标题中提取英文字符，转小写，用连字符连接。对于英文标题，这工作得很好：</p>
+<ul>
+<li>“The Next Two Years of Software Engineering” → <code>the-next-two-years-of-software-engineering.md</code></li>
+</ul>
+<p>但对于中文标题，问题就来了：</p>
+<ul>
+<li>“鲍勃·迪伦：我们这个时代的诗人” → <code>鲍勃迪伦我们这个时代的诗人.md</code>（中文字符没有被过滤）</li>
+</ul>
+<p>修复后又出现新问题：</p>
+<ul>
+<li>“硅谷的尤达大师” → <code>20260124-232655.md</code>（纯中文标题变成了时间戳）</li>
+</ul>
+<p>时间戳虽然能保证唯一性，但完全失去了语义。更糟糕的是，有些文章的原标题本身就没有意义，比如 “Thread by @AztecaAlpaca”——即使正确提取也是无用的 <code>thread-by-aztecaalpaca.md</code>。</p>
+<p>最终的解决方案是让 Claude 自己来生成文件名。在 prompt 中增加一个要求：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>首先，在第一行输出一个适合做文件名的英文短语（3-5个单词），格式：</span></span>
+<span class="line"><span>SLUG: your-english-slug-here</span></span>
+<span class="line"><span>规则：</span></span>
+<span class="line"><span>- 必须是纯英文，单词用连字符连接，全小写</span></span>
+<span class="line"><span>- 如果原标题是中文，翻译成英文并提取关键词</span></span>
+<span class="line"><span>- 如果原标题无意义，根据文章内容提炼核心主题</span></span></code></pre>
+<p>这样：</p>
+<ul>
+<li>“鲍勃·迪伦——欧美音乐的灵魂” → <code>bob-dylan-soul-of-rock.md</code></li>
+<li>“Thread by @AztecaAlpaca” → 根据文章内容生成有意义的名称</li>
+</ul>
+<p>AI 理解文章内容，自然能生成更合适的文件名。</p>
+<h2 id="原文信息的位置调整">原文信息的位置调整</h2>
+<p>一个小但重要的细节：原文信息（来源链接、作者、发表日期）应该放在哪里？</p>
+<p>最初我们把它放在摘要开头，紧跟在标题之后。但这样阅读体验不好——读者点开一篇摘要，首先想看的是内容概括，而不是元数据。</p>
+<p>调整后，原文信息移到了文章末尾，并且将原文标题和来源 URL 合并为一个链接：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="markdown"><code><span class="line"><span style="color:#79B8FF;font-weight:bold">## 原文信息</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| 字段 | 内容 |</span></span>
+<span class="line"><span style="color:#E1E4E8">|------|------|</span></span>
+<span class="line"><span style="color:#E1E4E8">| 原文 | [</span><span style="color:#DBEDFF;text-decoration:underline">文章标题</span><span style="color:#E1E4E8">](</span><span style="color:#E1E4E8;text-decoration:underline">https://source-url.com</span><span style="color:#E1E4E8">) |</span></span>
+<span class="line"><span style="color:#E1E4E8">| 作者 | 作者名 |</span></span>
+<span class="line"><span style="color:#E1E4E8">| 发表日期 | 2025-01-20 |</span></span></code></pre>
+<p>这样既保留了可追溯性，又不干扰主要内容的呈现。</p>
+<h2 id="最终的代码结构">最终的代码结构</h2>
+<p>经过这些迭代，最终的代码结构如下：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>tools/</span></span>
+<span class="line"><span>├── process.py           # 主处理脚本</span></span>
+<span class="line"><span>├── test_agent_sdk.py    # SDK 测试脚本</span></span>
+<span class="line"><span>├── summary_template.md  # 摘要模板参考</span></span>
+<span class="line"><span>├── README.md           # 使用说明</span></span>
+<span class="line"><span>├── logs/               # 处理日志</span></span>
+<span class="line"><span>└── docs/               # 开发文档</span></span></code></pre>
+<p>核心处理流程：</p>
+<ol>
+<li>创建日志文件，列出待处理文件</li>
+<li>逐个读取文章，解析 frontmatter 和正文</li>
+<li>调用 Claude 生成摘要（包含 SLUG 和 DESCRIPTION）</li>
+<li>从响应中提取 slug 作为文件名</li>
+<li>写入摘要文件，移动原文到归档目录</li>
+<li>更新日志状态</li>
+</ol>
+<h2 id="反思与总结">反思与总结</h2>
+<p>回顾整个开发过程，有几点值得记录：</p>
+<p><strong>异步编程的必要性</strong>：Claude Agent SDK 基于异步设计，这不是可选的，而是必须适应的。好在 Python 的 <code>asyncio</code> 已经足够成熟，改造成本并不高。</p>
+<p><strong>实时反馈很重要</strong>：长时间无响应的命令会让人焦虑。日志系统虽然简单，但极大改善了使用体验。下次设计批处理工具时，这应该是标配而非事后补救。</p>
+<p><strong>让 AI 做它擅长的事</strong>：文件命名这个问题，我们最初试图用正则表达式和规则来解决，结果越改越复杂。最终让 Claude 来生成文件名，反而是最简洁有效的方案。AI 理解语义，规则处理语法——各司其职。</p>
+<p><strong>格式设计需要迭代</strong>：摘要的格式不是一次设计好的，而是在实际使用中逐步调整的。过于结构化的分点列举会显得机械，适度的自然段落更易阅读。</p>
+<p>这个工具还有改进空间，但作为一个解决实际问题的工具，它已经可以正常工作了。剩下的优化，留待实际使用中发现新需求时再说。</p>
+<hr>
+<p><em>最后更新：2026-01-25</em></p></div><div class="continuation"><a href="/hzlzh/essays/">全部随笔</a><div><small>接着读</small><a href="/hzlzh/essays/ai-research-alienation-and-human-agency/">AI时代的科研异化与人的主体性</a></div></div></article></main> <footer class="column">hzlzh<a href="/hzlzh/about/">关于本站</a></footer> <script type="module">const t=document.querySelector(".theme-picker"),n=t.querySelectorAll("input"),a=document.querySelectorAll(".editions [data-choice]");function c(e,s=!0){document.documentElement.dataset.theme=e;for(const o of n)o.checked=o.value===e;for(const o of a)o.setAttribute("aria-pressed",String(o.dataset.choice===e));if(s)try{localStorage.setItem("hzlzh-theme",e)}catch{}}c(document.documentElement.dataset.theme||"silk",!1);for(const e of n)e.addEventListener("change",()=>{c(e.value),t.open=!1,t.querySelector("summary")?.focus()});for(const e of a)e.addEventListener("click",()=>c(e.dataset.choice));document.addEventListener("click",e=>{t.contains(e.target)||(t.open=!1)});document.addEventListener("keydown",e=>{e.key==="Escape"&&t.open&&(t.open=!1,t.querySelector("summary")?.focus())});</script> </body></html>  <script type="module">const t=document.querySelector(".reading-line");if(t){let e=function(){const n=document.documentElement.scrollHeight-innerHeight;l.style.transform="scaleX("+(n>0?Math.max(0,Math.min(1,scrollY/n)):1)+")"};const l=t.querySelector("span");t.hidden=!1,e(),addEventListener("scroll",e,{passive:!0}),addEventListener("resize",e)}</script>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 200" width="480" height="200">
+<path fill="#a75f4f" d="M0 0h480v200H0z"/>
+<g fill="none" stroke="#efcfad" stroke-width="2.5"><path id="lane" d="M-12 156h215c74 0 96-72 186-72h105"/><use href="#lane" y="-13"/><use href="#lane" y="-26"/><use href="#lane" y="-39"/><use href="#lane" y="-52"/></g>
+<path stroke="#683e3e" stroke-width="7" d="m148 90 2 10m14-11 2 10"/><path d="m147 103 22-1" stroke="#f3e3cb" stroke-width="3"/>
+</svg>
